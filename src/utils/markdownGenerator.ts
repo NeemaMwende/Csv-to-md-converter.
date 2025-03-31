@@ -1,6 +1,3 @@
-/**
- * Utilities for generating Markdown files from question data
- */
 export default {
   /**
    * Convert a question object to Markdown format

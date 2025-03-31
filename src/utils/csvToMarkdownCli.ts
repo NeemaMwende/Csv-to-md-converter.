@@ -28,9 +28,23 @@ const csvData = fs.readFileSync(csvFilePath, 'utf8')
 Papa.parse(csvData, {
   header: true,
   skipEmptyLines: true,
+  // Don't enforce a strict column count
+  delimiter: ',',
+  quoteChar: '"',
+  escapeChar: '"',
+  comments: false,
+  fastMode: false,
+  // Important settings to handle varying field counts
+  transform: (value) => value.trim(),
+  transformHeader: (header) => header.trim(),
   complete: (results) => {
-    if (results.errors && results.errors.length > 0) {
-      console.error('CSV parsing error:', results.errors[0].message)
+    // Filter out field count errors
+    const criticalErrors = results.errors?.filter(
+      (err) => !err.message.includes('Too few fields') && !err.message.includes('Too many fields'),
+    )
+
+    if (criticalErrors && criticalErrors.length > 0) {
+      console.error('CSV parsing error:', criticalErrors[0].message)
       process.exit(1)
     }
 
@@ -39,6 +53,15 @@ Papa.parse(csvData, {
     // Convert each question to markdown
     results.data.forEach((question, index) => {
       try {
+        // Skip empty rows
+        if (
+          Object.keys(question).length === 0 ||
+          (question['Question Type'] === undefined && question.Question === undefined)
+        ) {
+          console.log(`Skipping empty row at index ${index}`)
+          return
+        }
+
         const markdown = markdownGenerator.questionToMarkdown(question)
         const filename = markdownGenerator.generateFilename(question, index)
         const outputPath = path.join(outputDir, filename)
@@ -50,9 +73,9 @@ Papa.parse(csvData, {
       }
     })
 
-    console.log(
-      `Conversion complete. ${results.data.length} markdown files created in ${outputDir}`,
-    )
+    // Count actual files created
+    const fileCount = fs.readdirSync(outputDir).length
+    console.log(`Conversion complete. ${fileCount} markdown files created in ${outputDir}`)
   },
   error: (error) => {
     console.error('Error:', error.message)
