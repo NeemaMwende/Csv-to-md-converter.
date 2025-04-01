@@ -85,12 +85,10 @@ export default {
       this.markdownFiles = []
 
       try {
-        // Parse the CSV file
         const data = await csvService.parseCSV(this.selectedFile)
         this.processProgress = 30
         this.processStatus = `Parsed ${data.length} questions`
 
-        // Convert questions to markdown
         for (let i = 0; i < data.length; i++) {
           const question = data[i]
           const markdown = markdownGenerator.questionToMarkdown(question)
@@ -101,7 +99,6 @@ export default {
             content: markdown,
           })
 
-          // Update progress
           this.processProgress = 30 + Math.floor((i / data.length) * 60)
           this.processStatus = `Converting question ${i + 1} of ${data.length}`
         }
@@ -121,12 +118,10 @@ export default {
     async downloadFiles() {
       const zip = new JSZip()
 
-      // Add each markdown file to the zip
       this.markdownFiles.forEach((file) => {
         zip.file(file.filename, file.content)
       })
 
-      // Generate and download the zip
       const zipBlob = await zip.generateAsync({ type: 'blob' })
       saveAs(zipBlob, 'markdown-questions.zip')
     },
@@ -136,7 +131,10 @@ export default {
 
 <style scoped>
 .file-uploader {
-  margin: 20px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .upload-area {
@@ -147,6 +145,8 @@ export default {
   cursor: pointer;
   transition: border-color 0.3s;
   margin-bottom: 20px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .upload-area:hover {
@@ -162,6 +162,8 @@ export default {
   border-radius: 4px;
   cursor: pointer;
   margin-top: 10px;
+  font-size: 16px;
+  transition: background-color 0.2s;
 }
 
 .upload-btn:hover,
@@ -172,15 +174,20 @@ export default {
 .error {
   color: #f44336;
   margin: 10px 0;
+  width: 100%;
+  text-align: center;
 }
 
 .success {
   color: #4caf50;
   margin: 10px 0;
+  width: 100%;
+  text-align: center;
 }
 
 .processing {
   margin: 10px 0;
+  width: 100%;
 }
 
 .progress-bar {
